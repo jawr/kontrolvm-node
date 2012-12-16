@@ -1,17 +1,32 @@
 from flask import Flask, request, json, jsonify
+from tasks.celery import celery
+from tasks import installationdisk
 
 app = Flask(__name__)
 
-@app.route('/cmd/', methods=['POST', 'GET'])
+@app.route('/cmd/', methods=['POST'])
 def index():
     if request.headers['Content-Type'] == 'application/json':
         # send a command
         if request.method == 'POST':
-            return "JSON Message POST: " + json.dumps(request.json)
-        # check a command status
-        elif request.method == 'GET':
-            return "JSON Message GET: " + json.dumps(request.json)
+            command = request.json['command']
+            args = request.json['args']
 
+            if command == "installationdisk_download":
+                task = installationdisk.download_file.delay(args['url'],
+                    args['path'])
+
+            if task: return task.id
+    return error()
+
+@app.route('/cmd/<task_id>/')
+def cmd_status(task_id):
+    task = celery.AsyncResult(task_id)
+    print task
+    print task.status
+    return jsonify(task.result)
+
+def error():
     resp = jsonify()
     resp.status_code = 405
     return resp
