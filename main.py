@@ -22,8 +22,6 @@ def index():
 @app.route('/cmd/<task_id>/')
 def cmd_status(task_id):
     task = celery.AsyncResult(task_id)
-    print task
-    print task.status
     return jsonify(task.result)
 
 def error():
