@@ -29,7 +29,8 @@ def download_file(url, path):
         file_size_dl += len(buf)
         io.write(buf)
 
-        if ((file_size_dl * 100. / file_size) % 5) == 0:
+        print file_size_dl * 100 / file_size
+        if ((file_size_dl * 100 / file_size) % 5) == 0:
             celery.current_task.update_state(state='PROGRESS', meta=
                 {
                     'total_bytes': file_size,

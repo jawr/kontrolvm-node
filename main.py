@@ -9,17 +9,30 @@ def index():
     if request.headers['Content-Type'] == 'application/json':
         # send a command
         if request.method == 'POST':
-            url = request.json['url']
-            path = request.json['path']
-            task = installationdisk.download_file.delay(url, path)
+            command = request.json['command']
+            args = request.json['args']
 
-            return task.id
+            if command == "installationdisk_download":
+                task = installationdisk.download_file.delay(args['url'],
+                    args['path'])
+
+            if task: return task.id
     return error()
 
-@app.route('/cmd/<task_id>/')
+@app.route('/cmd/status/<task_id>/')
 def cmd_status(task_id):
     task = celery.AsyncResult(task_id)
-    return jsonify(task.result)
+    ret = {}
+    ret['state'] = task.state
+    if task.state == 'PROGRESS' or task.state == 'COMPLETE':
+        ret['args'] = task.result
+    return jsonify(ret)
+
+@app.route('/cmd/abort/<task_id>/')
+def cmd_abort(task_id):
+    task = celery.AsyncResult(task_id)
+    task.revoke(terminate=True)
+    return jsonify({'state': 'ABORTED'})
 
 def error():
     resp = jsonify()
