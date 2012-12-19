@@ -1,7 +1,21 @@
 from __future__ import absolute_import
-from tasks.celery import celery
+from tasks.celery import celery, logger
 import urllib2
 import os
+import re
+
+match_disk = re.compile('.*\.(iso|img|dvd)$')
+
+@celery.task()
+def list_files(path):
+    ret = {'disks': []}
+    for name in os.listdir(path):
+        file_path = os.path.join(path, name)
+        if os.path.isfile(file_path) and match_disk.search(name):
+            total_bytes = os.path.getsize(file_path)
+            disk = {'filename': name, 'total_bytes': total_bytes}
+            ret['disks'].append(disk)
+    return ret
 
 @celery.task()
 def download_file(url, path):

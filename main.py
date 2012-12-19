@@ -16,6 +16,9 @@ def index():
                 task = installationdisk.download_file.delay(args['url'],
                     args['path'])
 
+            elif command == "installationdisk_list":
+                task = installationdisk.list_files.delay(args['path'])
+
             if task: return task.id
     return error()
 
@@ -24,7 +27,7 @@ def cmd_status(task_id):
     task = celery.AsyncResult(task_id)
     ret = {}
     ret['state'] = task.state
-    if task.state == 'PROGRESS' or task.state == 'COMPLETE':
+    if task.state == 'PROGRESS' or task.state == 'SUCCESS':
         ret['args'] = task.result
     return jsonify(ret)
 
