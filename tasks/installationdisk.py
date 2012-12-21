@@ -3,8 +3,16 @@ from tasks.celery import celery, logger
 import urllib2
 import os
 import re
+import time
 
 match_disk = re.compile('.*\.(iso|img|dvd)$')
+
+@celery.task()
+def delete_file(path):
+    try:
+        os.remove(path)
+    except Exception as e:
+        return {'args': {'msg': e.strerror}}
 
 @celery.task()
 def list_files(path):
@@ -36,6 +44,7 @@ def download_file(url, path):
     file_size_dl = 0
     block_sz = 8192
 
+    now = time.time()
     while True:
         buf = stream.read(block_sz)
         if not buf: break
@@ -43,14 +52,14 @@ def download_file(url, path):
         file_size_dl += len(buf)
         io.write(buf)
 
-        print file_size_dl * 100 / file_size
-        if ((file_size_dl * 100 / file_size) % 5) == 0:
+        if (time.time() - now) > 5:
             celery.current_task.update_state(state='PROGRESS', meta=
                 {
                     'total_bytes': file_size,
                     'percent': file_size_dl * 100. / file_size,
                     'total_bytes_dl': file_size_dl
                 })
+            now = time.time()
 
     celery.current_task.update_state(state='COMPLETE', meta=
         {
@@ -59,3 +68,8 @@ def download_file(url, path):
             'total_bytes_dl': file_size_dl
         })
     io.close()
+    return {
+            'total_bytes': file_size,
+            'percent': 100.0
+            'total_bytes_dl': file_size_dl
+        }

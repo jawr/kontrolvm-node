@@ -19,6 +19,9 @@ def index():
             elif command == "installationdisk_list":
                 task = installationdisk.list_files.delay(args['path'])
 
+            elif command == "installationdisk_delete":
+                task = installationdisk.delete_file.delay(args['path'])
+
             if task: return task.id
     return error()
 
@@ -28,6 +31,7 @@ def cmd_status(task_id):
     ret = {}
     ret['state'] = task.state
     if task.state == 'PROGRESS' or task.state == 'SUCCESS':
+        print task.result
         ret['args'] = task.result
     return jsonify(ret)
 
