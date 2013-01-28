@@ -1,3 +1,4 @@
+#!/usr/bin/python
 from flask import Flask, request, json, jsonify
 from tasks.celery import celery
 from tasks import installationdisk
