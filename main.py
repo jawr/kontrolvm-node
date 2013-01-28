@@ -1,6 +1,13 @@
 from flask import Flask, request, json, jsonify
 from tasks.celery import celery
 from tasks import installationdisk
+from optparse import OptionParser
+
+parser = OptionParser()
+parser.add_option("-p", "--port", dest="port", default=5000, 
+    help="Port to listen on", type="int")
+parser.add_option("-l", "--listen", dest="listen", default="10.10.10.1", 
+    help="Address to listen on", type="string")
 
 app = Flask(__name__)
 
@@ -47,5 +54,6 @@ def error():
     return resp
 
 if __name__ == "__main__":
+    (options, args) = parser.parse_args()
     app.debug = True
-    app.run(host="127.0.0.1", port=5000)
+    app.run(host=options.listen, port=options.port)

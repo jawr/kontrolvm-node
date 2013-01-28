@@ -70,6 +70,6 @@ def download_file(url, path):
     io.close()
     return {
             'total_bytes': file_size,
-            'percent': 100.0
+            'percent': 100.0,
             'total_bytes_dl': file_size_dl
         }
