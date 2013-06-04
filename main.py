@@ -17,6 +17,8 @@ def index():
     if request.headers['Content-Type'] == 'application/json':
         # send a command
         if request.method == 'POST':
+            print request.json
+            task = None
             command = request.json['command']
             args = request.json['args']
 
@@ -25,10 +27,16 @@ def index():
                     args['path'])
 
             elif command == "installationdisk_list":
+                print command
                 task = installationdisk.list_files.delay(args['path'])
 
             elif command == "installationdisk_delete":
                 task = installationdisk.delete_file.delay(args['path'])
+
+            elif command == "check":
+                resp = jsonify()
+                resp.status_code = 200
+                return resp
 
             if task: return task.id
     return error()
