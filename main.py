@@ -2,6 +2,7 @@
 from flask import Flask, request, json, jsonify
 from tasks.celery import celery
 from tasks import installationdisk
+from tasks import iptables
 from optparse import OptionParser
 
 parser = OptionParser()
@@ -35,6 +36,40 @@ def index():
 
             elif command == "check":
                 resp = jsonify()
+                resp.status_code = 200
+                return resp
+
+            elif command == "network_track_ip":
+               return iptables.track_ip(args['ip'])
+
+            elif command == "network_check_all": 
+                (rx, tx) = iptables.check_all()
+                ret = {}
+                if rx and tx:
+                    ret['rx'] = {}
+                    ret['rx']['packets'] = rx[0]
+                    ret['rx']['bytes'] = rx[1]
+                    ret['tx'] = {}
+                    ret['tx']['packets'] = tx[0]
+                    ret['tx']['bytes'] = tx[1]
+                return jsonify(ret)
+
+            elif command == "network_check_ip": 
+                (rx, tx) = iptables.check_ip(args['ip'])
+                ret = {}
+                if rx and tx:
+                    ret['rx'] = {}
+                    ret['rx']['packets'] = rx[0]
+                    ret['rx']['bytes'] = rx[1]
+                    ret['tx'] = {}
+                    ret['tx']['packets'] = tx[0]
+                    ret['tx']['bytes'] = tx[1]
+                else:
+                    ret['error'] = 'Unable to get stats for IP'
+                return jsonify(ret)
+
+            elif command == "network_remove_ip":
+                resp = jsonify(iptables.remove_ip(args['ip']))
                 resp.status_code = 200
                 return resp
 
